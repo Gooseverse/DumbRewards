@@ -1,0 +1,24 @@
+class SnapshotRewards < Contracts::ERC20
+  pragma :rubidity, "1.0.0"
+
+  constructor(name: :string, symbol: :string, decimals: :uint256) {
+    super(name, symbol, decimals)
+  end
+
+  # Take a snapshot of the current reward balance
+  function :takeSnapshot, :public, :virtual do
+    s.snapshotBalance[msg.sender] = s.balanceOf[msg.sender]
+  end
+
+  # Claim rewards based on the snapshot
+  function :claimReward, :public, :virtual do
+    snapshotBalance = s.snapshotBalance[msg.sender]
+    currentBalance = s.balanceOf[msg.sender]
+    
+    if snapshotBalance < currentBalance # Check if there are rewards to claim
+      reward = currentBalance - snapshotBalance
+      s.snapshotBalance[msg.sender] = currentBalance
+      super.transfer(to: msg.sender, amount: reward)
+    end
+  end
+end
